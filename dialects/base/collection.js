@@ -123,12 +123,6 @@ _.extend(CollectionBase.prototype, _.omit(Backbone.Collection.prototype, collect
     return this;
   },
 
-  // Prepare a model or hash of attributes to be added to this collection.
-  _prepareModel: function(attrs, options) {
-    if (attrs instanceof ModelBase) return attrs;
-    return new this.model(attrs, options);
-  },
-
   // Convenience method for map, returning a `Promise.all` promise.
   mapThen: function(iterator, context) {
     return Promise.all(this.map(iterator, context));
@@ -141,6 +135,26 @@ _.extend(CollectionBase.prototype, _.omit(Backbone.Collection.prototype, collect
 
   fetch: function() {
     return Promise.rejected('The fetch method has not been implemented');
+  },
+
+  // Prepare a model or hash of attributes to be added to this collection.
+  _prepareModel: function(attrs, options) {
+    if (attrs instanceof ModelBase) return attrs;
+    return new this.model(attrs, options);
+  },
+
+  // Internal method called every time a model in the set fires an event.
+  // Sets need to update their indexes when models change ids. All other
+  // events simply proxy through. "add" and "remove" events that originate
+  // in other collections are ignored.
+  _onModelEvent: function(event, model, collection, options) {
+    if ((event === 'add' || event === 'remove') && collection !== this) return;
+    if (event === 'destroyed') this.remove(model, options);
+    if (model && event === 'change:' + model.idAttribute) {
+      delete this._byId[model.previous(model.idAttribute)];
+      if (model.id != null) this._byId[model.id] = model;
+    }
+    this.trigger.apply(this, arguments);
   }
 
 });
