@@ -34,27 +34,30 @@ var ModelBase = function(attributes, options) {
 
 _.extend(ModelBase.prototype, _.omit(Backbone.Model.prototype), Events, {
 
-  // Similar to the standard `Backbone` set method, but without individual
-  // change events, and adding different meaning to `changed` and `previousAttributes`
-  // defined as the last "sync"'ed state of the model.
+  // Similar to the standard `Backbone` set method, and adding different
+  // meaning to `changed` and `previousAttributes` defined as the
+  // last "sync"'ed state of the model.
   set: function(key, val, options) {
     if (key == null) return this;
-    var attrs;
+    var opts, attrs;
 
     // Handle both `"key", value` and `{key: value}` -style arguments.
     if (typeof key === 'object') {
       attrs = key;
-      options = val;
+      opts = val;
     } else {
       (attrs = {})[key] = val;
     }
-    options || (options = {});
+    opts = opts || options || {};
 
     // Extract attributes and options.
-    var hasChanged = false;
-    var unset   = options.unset;
-    var current = this.attributes;
-    var prev    = this._previousAttributes;
+    var silent     = opts.silent;
+    var unset      = opts.unset;
+    var current    = this.attributes;
+    var prev       = this._previousAttributes;
+    var changing   = this._changing;
+    var changes    = [];
+    this._changing = true;
 
     // Check for changes of `id`.
     if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
@@ -64,14 +67,29 @@ _.extend(ModelBase.prototype, _.omit(Backbone.Model.prototype), Events, {
       val = attrs[attr];
       if (!_.isEqual(prev[attr], val)) {
         this.changed[attr] = val;
-        if (!_.isEqual(current[attr], val)) hasChanged = true;
+        if (!_.isEqual(current[attr], val)) changes.push(attr);
       } else {
         delete this.changed[attr];
       }
       unset ? delete current[attr] : current[attr] = val;
     }
 
-    if (hasChanged && !options.silent) this.trigger('change', this, options);
+    if (!silent) {
+      if (changes.length) this._pending = true;
+      for (var i = 0, l = changes.length; i < l; i++) {
+        this.trigger('change:' + changes[i], this, current[changes[i]], opts);
+      }
+    }
+
+    if (changing) return this;
+    if (!silent) {
+      while (this._pending) {
+        this._pending = false;
+        this.trigger('change', this, opts);
+      }
+    }
+    this._pending = false;
+    this._changing = false;
     return this;
   },
 
