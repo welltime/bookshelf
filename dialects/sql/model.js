@@ -159,7 +159,7 @@ exports.Model = ModelBase.extend({
       }
 
       // Set the attributes on the model.
-      this.set(vals, {silent: true});
+      this.set(vals);
 
       // If there are any save constraints, set them on the model.
       if (this.relatedData && this.relatedData.type !== 'morphTo') {
