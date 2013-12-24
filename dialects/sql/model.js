@@ -196,7 +196,7 @@ exports.Model = ModelBase.extend({
 
         return Promise.all([
           this.triggerThen((method === 'insert' ? 'created' : 'updated'), this, resp, options),
-          this.triggerThen('saved', this, resp, options)
+          this.triggerThen('sync saved', this, resp, options)
         ]);
 
       });

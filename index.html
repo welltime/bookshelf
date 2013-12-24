@@ -297,9 +297,13 @@
       Introduction
     </a>
 
-    <a class="toc_title" href="#upgrading">
-      Upgrading
+    <a class="toc_title" href="#installation">
+      Installation
     </a>
+    <ul class="toc_section">
+      <li>– <a href="#installation-nodejs">Node.js</a></li>
+      <li>– <a href="#installation-websql">WebSQL</a></li>
+    </ul>
 
     <a class="toc_title" href="#Initialize">
       Initialize
@@ -346,6 +350,7 @@
       <li>– <a href="#Model-resetQuery">resetQuery</a></li>
       <li>– <a href="#Model-hasTimestamps">hasTimestamps</a></li>
       <li>– <a href="#Model-timestamp">timestamp</a></li>
+      <li>– <a href="#Model-attributes">attributes</a></li>
       <li>– <a href="#Model-defaults">defaults</a></li>
       <li>– <a href="#Model-isNew">isNew</a></li>
       <li>– <a href="#Model-hasChanged">hasChanged</a></li>
@@ -418,9 +423,8 @@
     </p>
 
     <p>
-      <b>Bookshelf</b> is a <a href="http://promises-aplus.github.com/promises-spec/">promise based</a> ORM for Node.js,
-      built on <a href="http://knexjs.org">Knex</a> query builder.
-      It extends the Model &amp; Collection foundations of Backbone.js, providing <a href="#Bookshelf-transaction">transaction support</a>,
+      <b>Bookshelf</b> is a Data-Mapper ORM for Node.js and WebSQL,
+      built on <a href="http://knexjs.org">Knex</a> query builder. It has both a <a href="https://github.com/petkaantonov/bluebird#what-are-promises-and-why-should-i-use-them">promise based</a> and <a href="#faq-callbacks">callback</a> api, extending the Model &amp; Collection foundations of Backbone.js. It provides <a href="#Bookshelf-transaction">transaction support</a>,
       eager/nested-eager relation loading, <a href="#Model-polymorphic-associations">polymorphic associations</a>, and support for
       one-to-one, one-to-many, and many-to-many relations.
     </p>
@@ -497,6 +501,8 @@
       of Knex as well if you wish to build any custom queries outside of the ORM.
     </p>
 
+    <h3 id="installation-nodejs">Node.js:</h3>
+
 <pre>
 $ npm install knex --save
 $ npm install bookshelf --save
@@ -507,30 +513,9 @@ $ npm install pg
 $ npm install sqlite3
 </pre>
 
-    <h2 id="upgrading">Upgrading</h2>
+    <h3 id="installation-websql">WebSQL:</h3>
 
-    <p>
-      If you are upgrading Bookshelf from 0.3.x to 0.5.x, you'll notice that some things have broken.
-      Luckily, with a few quick fixes to your code, you should be up and runnning in no-time.
-      <ul>
-        <li>
-          Global state is no longer stored in the library, an instance is returned from <tt>Bookshelf.initialize</tt>,
-          so you will need to call this once and then reference this <tt>Bookshelf</tt> client elsewhere in your application.
-          See the <a href="#Initialize">initialize</a> section for more information.
-        </li>
-        <li>
-          Lowercasing of <tt>Bookshelf.initialize</tt>, <tt>Bookshelf.knex</tt>, <tt>Bookshelf.transaction</tt>.
-        </li>
-        <li>
-          During the lifecycle events, such as "fetching", "saving", or "destroying", the model no-longer contains the active
-          query builder instance at the time it is saved. If you need to modify the query builder chain inside of an event handler,
-          you may now use <tt>options.query</tt> inside the event handlers.
-        </li>
-        <li>
-          Other smaller bugfixes &amp; changes noted in the <a href="#changelog">Change Log</a>
-        </li>
-      </ul>
-    </p>
+
 
     <h2 id="Initialize">Bookshelf.initialize</h2>
 
@@ -1388,48 +1373,6 @@ new Author({id: 1, first_name: 'User'})
       is completed.
     </p>
 
-    <p id="Model-attributes">
-      <b class="header">attributes</b><code>model.attributes</code>
-      <br />
-      The <b>attributes</b> property is the internal hash containing the database row.
-    </p>
-
-    <p>
-      Please use <a href="#Model-set">set</a> to update the <b>attributes</b>
-      instead of modifying them directly. If you'd like to retrieve and munge a
-      copy of the model's attributes, use <a href="#Model-toJSON">toJSON</a>
-      instead.
-    </p>
-
-    <p id="Model-defaults">
-      <b class="header">defaults</b><code>model.defaults or model.defaults()</code>
-      <br />
-      The <b>defaults</b> hash (or function) can be used to specify the default
-      attributes for your model. Unlike with Backbone's model defaults, Bookshelf defaults
-      are applied before an "insert" query, rather than during object creation.
-    </p>
-
-<pre>
-var Meal = Bookshelf.Model.extend({
-  tableName: 'meals',
-  defaults: {
-    appetizer:  "caesar salad",
-    entree:     "ravioli",
-    dessert:    "cheesecake"
-  }
-});
-
-new Meal().save().then(function(meal) {
-  alert("Dessert will be " + meal.get('dessert'));
-});
-</pre>
-
-    <p class="warning">
-      Remember that in JavaScript, objects are passed by reference, so if you
-      include an object as a default value, it will be shared among all instances.
-      Instead, define <b>defaults</b> as a function.
-    </p>
-
     <p id="Model-format">
       <b class="header">format</b><code>model.format(attributes, [options])</code>
       <br />
@@ -1590,6 +1533,60 @@ var PostModel = Bookshelf.Model.extend({
       set the <tt>created_at</tt> and <tt>updated_at</tt> attributes to the current date if it is new,
       and just the <tt>updated_at</tt> attribute if it isn't. You may override this method if you
       wish to use different column names or types for the timestamps.
+    </p>
+
+    <p id="Model-attributes">
+      <b class="header">attributes</b><code>model.attributes</code>
+      <br />
+      The <b>attributes</b> property is the internal hash containing the database row.
+    </p>
+
+    <p>
+      Please use <a href="#Model-set">set</a> to update the <b>attributes</b>
+      instead of modifying them directly. If you'd like to retrieve and munge a
+      copy of the model's attributes, use <a href="#Model-toJSON">toJSON</a>
+      instead.
+    </p>
+
+    <p id="Model-defaults">
+      <b class="header">defaults</b><code>model.defaults or model.defaults()</code>
+      <br />
+      The <b>defaults</b> hash (or function) can be used to specify the default
+      attributes for your model. Unlike with Backbone's model defaults, Bookshelf defaults
+      are applied before an "insert" query, rather than during object creation.
+    </p>
+
+<pre>
+var Meal = Bookshelf.Model.extend({
+  tableName: 'meals',
+  defaults: {
+    appetizer:  "caesar salad",
+    entree:     "ravioli",
+    dessert:    "cheesecake"
+  }
+});
+
+// or:
+var Meal = Bookshelf.Model.extend({
+  tableName: 'meals',
+  defaults: function() {
+    return {
+      appetizer:  "caesar salad",
+      entree:     "ravioli",
+      dessert:    "cheesecake"
+    }
+  }
+});
+
+new Meal().save().then(function(meal) {
+  alert("Dessert will be " + meal.get('dessert'));
+});
+</pre>
+
+    <p class="warning">
+      Remember that in JavaScript, objects are passed by reference, so if you
+      include an object as a default value, it will be shared among all instances.
+      Instead, define <b>defaults</b> as a function.
     </p>
 
     <p id="Model-clone">

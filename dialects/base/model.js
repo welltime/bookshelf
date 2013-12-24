@@ -178,7 +178,7 @@ _.extend(ModelBase.prototype, _.omit(Backbone.Model.prototype), Events, {
       return this.sync(options).del();
     }).then(function(resp) {
       this.clear();
-      return this.triggerThen('destroyed', this, resp, options);
+      return this.triggerThen('destroy destroyed', this, resp, options);
     }).then(this._reset);
   })
 
