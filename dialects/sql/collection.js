@@ -123,7 +123,7 @@ exports.Collection = CollectionBase.extend({
 // Handles the response data for the collection, returning from the collection's fetch call.
 function handleResponse(response) {
   var relatedData = this.relatedData;
-  this.set(response, {silent: true, parse: true}).invoke('_reset');
+  this.set(response, {parse: true}).invoke('_reset');
   if (relatedData && relatedData.isJoined()) {
     relatedData.parsePivot(this.models);
   }
